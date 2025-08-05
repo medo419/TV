@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>بث كورة مباشر</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    header {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      text-align: center;
+      font-size: 28px;
+      font-weight: bold;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    header i {
+      color: #ff6b6b;
+      margin-left: 10px;
+    }
+    
+    .search-container {
+      max-width: 800px;
+      margin: 0 auto 25px;
+      position: relative;
+    }
+    
+    .search-container input {
+      width: 100%;
+      padding: 15px 20px 15px 50px;
+      border-radius: 50px;
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 16px;
+      outline: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .search-container input:focus {
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.3);
+    }
+    
+    .search-container i {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #aaa;
+    }
+    
+    .category {
+      background: rgba(30, 30, 46, 0.8);
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      animation: fadeIn 0.5s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .category h2 {
+      border-bottom: 2px solid #ff6b6b;
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .category h2 i {
+      margin-left: 10px;
+      color: #ff6b6b;
+    }
+    
+    .channels {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 20px;
+    }
+    
+    .channel {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(5px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .channel:hover {
+      transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      border-color: rgba(255, 107, 107, 0.3);
+    }
+    
+    .channel img {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 5px;
+    }
+    
+    .channel span {
+      display: block;
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .channel:hover span {
+      color: #ff6b6b;
+    }
+    
+    #playerModal {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 9999;
+      padding: 20px;
+    }
+    
+    #playerModal video {
+      width: 100%;
+      max-width: 900px;
+      border: 3px solid #ff6b6b;
+      border-radius: 10px;
+      box-shadow: 0 0 40px rgba(255, 107, 107, 0.3);
+    }
+    
+    #closeBtn {
+      margin-top: 20px;
+      background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+      border: none;
+      color: white;
+      padding: 12px 30px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 50px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+    }
+    
+    #closeBtn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 50px;
+      font-size: 24px;
+      color: #ff6b6b;
+    }
+    
+    .loading i {
+      font-size: 48px;
+      margin-bottom: 20px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .footer {
+      text-align: center;
+      padding: 20px;
+      margin-top: 30px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 14px;
+    }
+    
+    @media (max-width: 768px) {
+      .channels {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 15px;
+      }
+      
+      header {
+        font-size: 22px;
+      }
+      
+      .category {
+        padding: 15px;
+      }
+      
+      .channel img {
+        width: 80px;
+        height: 80px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .channels {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      }
+      
+      .category h2 {
+        font-size: 20px;
+      }
+      
+      .channel {
+        padding: 10px;
+      }
+      
+      .channel img {
+        width: 60px;
+        height: 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <i class="fas fa-futbol"></i> بث كورة مباشر
+  </header>
+  
+  <div class="search-container">
+    <i class="fas fa-search"></i>
+    <input type="text" id="searchInput" placeholder="ابحث عن قنوات...">
+  </div>
+  
+  <div id="content"></div>
+  
+  <div id="playerModal">
+    <video id="videoPlayer" controls autoplay></video>
+    <button id="closeBtn"><i class="fas fa-times"></i> إغلاق البث</button>
+  </div>
+  
+  <div class="footer">
+    <p>© 2023 بث كورة مباشر - جميع الحقوق محفوظة</p>
+  </div>
+
+  <script>
+    const channels = [
+      { "name": "beIN SPORTS HD1", "url": "https://stream.sainaertebat.com/hls2/bein1.m3u8", "logo": "https://jzu4.github.io/files/img/IMG_6703.png", "category": "BeIN Sports" },
+      { "name": "beIN SPORTS HD2", "url": "https://cdn1-europe.mgmlcdn.s-cloudflare.com:25463/xH5gc4mOg8vw4txxz36/38_.m3u8?", "logo": "https://jzu4.github.io/files/img/IMG_6703.png", "category": "BeIN Sports" },
+      { "name": "beIN SPORTS HD3", "url": "https://cdn1-europe.mgmlcdn.s-cloudflare.com:25463/xH5gc4mOg8vw4txxz36/250_.m3u8?", "logo": "https://jzu4.github.io/files/img/IMG_6703.png", "category": "BeIN Sports" },
+      { "name": "beIN SPORTS HD4", "url": "https://cdn1-europe.mgmlcdn.s-cloudflare.com:25463/xH5gc4mOg8vw4txxz36/251_.m3u8?", "logo": "https://jzu4.github.io/files/img/IMG_6703.png", "category": "BeIN Sports" },
+      { "name": "beIN SPORTS HD5", "url": "https://cdn1-europe.mgmlcdn.s-cloudflare.com:25463/xH5gc4mOg8vw4txxz36/251_.m3u8?", "logo": "https://jzu4.github.io/files/img/IMG_6703.png", "category": "BeIN Sports" },
+      { "name": "SSC 1", "url": "https://stream.sainaertebat.com/hls2/ssc1.m3u8", "logo": "https://jzu4.github.io/files/img/504D5767-2196-4154-8F97-58961653DCB7.png", "category": "SSC" },
+      { "name": "SSC 2", "url": "https://cdn1-europe.mgmlcdn.s-cloudflare.com:25463/xH5gc4mOg8vw4txxz36/163_.m3u8?", "logo": "https://jzu4.github.io/files/img/504D5767-2196-4154-8F97-58961653DCB7.png", "category": "SSC" },
+      { "name": "SSC 3", "url": "https://cdn1-europe.mgmlcdn.s-cloudflare.com:25463/xH5gc4mOg8vw4txxz36/147_.m3u8?", "logo": "https://jzu4.github.io/files/img/504D5767-2196-4154-8F97-58961653DCB7.png", "category": "SSC" },
+      { "name": "SSC 4", "url": "https://cdn1-europe.mgmlcdn.s-cloudflare.com:25463/xH5gc4mOg8vw4txxz36/178_.m3u8?", "logo": "https://jzu4.github.io/files/img/504D5767-2196-4154-8F97-58961653DCB7.png", "category": "SSC" },
+      { "name": "SSC 5", "url": "https://cdn1-europe.mgmlcdn.s-cloudflare.com:25463/xH5gc4mOg8vw4txxz36/179_.m3u8", "logo": "https://jzu4.github.io/files/img/504D5767-2196-4154-8F97-58961653DCB7.png", "category": "SSC" },
+      { "name": "SSC Extra1", "url": "https://cdn1-europe.mgmlcdn.s-cloudflare.com:25463/xH5gc4mOg8vw4txxz36/193_.m3u8?", "logo": "https://jzu4.github.io/files/img/504D5767-2196-4154-8F97-58961653DCB7.png", "category": "SSC" },
+      { "name": "SSC Extra2", "url": "https://cdn1-europe.mgmlcdn.s-cloudflare.com:25463/xH5gc4mOg8vw4txxz36/226_.m3u8?", "logo": "https://jzu4.github.io/files/img/504D5767-2196-4154-8F97-58961653DCB7.png", "category": "SSC" },
+      { "name": "ON Sports", "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8", "logo": "3.png", "category": "ON Sports" },
+      { "name": "السعودية", "url": "https://cdn-globecast.akamaized.net/live/eds/saudi_tv/hls_roku/index.m3u8", "logo": "https://i.imgur.com/GRQTndk.png", "category": "Saudi Arabia" },
+      { "name": "السعودية الثانيه", "url": "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-ksa-now/71ed3aa814c643306c0a8bc4fcc7d17f/index.m3u8", "logo": "https://i.imgur.com/sEOjApe.png", "category": "Saudi Arabia" },
+      { "name": "SBC", "url": "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-sbc/90e09c28db26435799b4a14892a167/index.m3u8", "logo": "https://i.imgur.com/9JSQglj.png", "category": "Saudi Arabia" },
+      { "name": "ذكريات", "url": "https://al-ekhbaria-prod-dub.shahid.net/out/v1/ef87956651694f4ba2ccc16e852dbb95/index.m3u8", "logo": "https://i.imgur.com/AKa1X9d.png", "category": "Saudi Arabia" },
+      { "name": "الاخبارية", "url": "https://cdn-globecast.akamaized.net/live/eds/al_ekhbariya/hls_roku/index.m3u8", "logo": "https://i.imgur.com/WcRlHQm.png", "category": "Saudi Arabia" },
+      { "name": "القران الكريم", "url": "http://m.live.net.sa:1935/live/quran/gmswf.m3u8", "logo": "https://i.imgur.com/A2fJysM.png", "category": "Saudi Arabia" },
+      { "name": "السنة النبوية", "url": "http://m.live.net.sa:1935/live/sunnah/playlist.m3u8", "logo": "https://i.imgur.com/S6LcTJv.png", "category": "Saudi Arabia" },
+      { "name": "اقرا", "url": "https://playlist.fasttvcdn.com/pl/dlkqw1ftuvuuzkcb4pxdcg/Iqraafasttv3/playlist.m3u8", "logo": "https://i.imgur.com/HPVsIa4.png", "category": "Saudi Arabia" },
+      { "name": "الثقافية", "url": "https://thaqafeyyah-ak.akamaized.net/out/v1/f6851f68ada94f82ae6b64a441eb5ab1/index.m3u8", "logo": "https://i.imgur.com/juM3k8B.jpg", "category": "Saudi Arabia" },
+      { "name": "الحدث", "url": "https://av.alarabiya.net/alarabiapublish/alhadath.smil/playlist.m3u8", "logo": "https://i.imgur.com/De4SEWE.png", "category": "Saudi Arabia" },
+      { "name": "خليجي", "url": "https://shls-live-enc.edgenextcdn.net/out/v1/0afd546fcb5342f69d6bfff2dd1596e9/index_20.m3u8", "logo": "https://jzu4.github.io/files/img/A06BD3B9-B28A-48B6-8691-44A8E6FA41CD.png", "category": "Shahid" },
+      { "name": "باب الحارة", "url": "https://shls-live-enc.edgenextcdn.net/out/v1/948c54279b594944adde578c95f1d7d1/index.m3u8", "logo": "https://i.imgur.com/QtlnZbq.png", "category": "Shahid" },
+      { "name": "MBC 1", "url": "https://mbc1na-prod-dub-enc.edgenextcdn.net/out/v1/84ab37e99d6e4b16b33c6600f94f6ccb/index_6.m3u8", "logo": "https://jzu4.github.io/files/img/C6630DD3 ‑4242‑B800‑38FB40DE2BA2.png", "category": "MBC" }
+    ];
+
+    // تجميع القنوات حسب الفئة
+    const grouped = {};
+    channels.forEach(c => {
+      if (!grouped[c.category]) grouped[c.category] = [];
+      grouped[c.category].push(c);
+    });
+
+    // عرض القنوات
+    const content = document.getElementById('content');
+    const video = document.getElementById('videoPlayer');
+    const playerModal = document.getElementById('playerModal');
+    const searchInput = document.getElementById('searchInput');
+    let hls;
+
+    function renderChannels() {
+      content.innerHTML = '';
+      
+      for (let cat in grouped) {
+        const section = document.createElement('div');
+        section.className = 'category';
+        
+        const title = document.createElement('h2');
+        title.innerHTML = `<i class="fas fa-${getCategoryIcon(cat)}"></i> ${cat}`;
+        section.appendChild(title);
+        
+        const container = document.createElement('div');
+        container.className = 'channels';
+        
+        grouped[cat].forEach(channel => {
+          const div = document.createElement('div');
+          div.className = 'channel';
+          
+          const img = document.createElement('img');
+          img.src = channel.logo;
+          img.alt = channel.name;
+          
+          const name = document.createElement('span');
+          name.textContent = channel.name;
+          
+          div.appendChild(img);
+          div.appendChild(name);
+          
+          div.addEventListener('click', () => {
+            if (hls) hls.destroy();
+            
+            // إظهار شاشة التحميل
+            playerModal.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>جارٍ التحميل...</p></div>';
+            playerModal.style.display = 'flex';
+            
+            setTimeout(() => {
+              if (Hls.isSupported()) {
+                hls = new Hls();
+                hls.loadSource(channel.url);
+                hls.attachMedia(video);
+              } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = channel.url;
+              } else {
+                alert('متصفحك لا يدعم البث.');
+                return;
+              }
+              
+              // استبدال شاشة التحميل بالفيديو
+              playerModal.innerHTML = '';
+              playerModal.appendChild(video);
+              const closeBtn = document.getElementById('closeBtn');
+              playerModal.appendChild(closeBtn);
+            }, 1000);
+          });
+          
+          container.appendChild(div);
+        });
+        
+        section.appendChild(container);
+        content.appendChild(section);
+      }
+    }
+
+    // الحصول على أيقونة الفئة المناسبة
+    function getCategoryIcon(category) {
+      const icons = {
+        "BeIN Sports": "football-ball",
+        "SSC": "tv",
+        "ON Sports": "tv",
+        "Saudi Arabia": "flag",
+        "Shahid": "play-circle",
+        "MBC": "play-circle"
+      };
+      return icons[category] || "globe";
+    }
+
+    // البحث في القنوات
+    searchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const allChannels = document.querySelectorAll('.channel');
+      
+      allChannels.forEach(channel => {
+        const channelName = channel.querySelector('span').textContent.toLowerCase();
+        if (channelName.includes(searchTerm)) {
+          channel.style.display = 'block';
+        } else {
+          channel.style.display = 'none';
+        }
+      });
+    });
+
+    // تحميل القنوات عند بدء الصفحة
+    renderChannels();
+
+    // إغلاق المشغل
+    document.getElementById('closeBtn').onclick = () => {
+      if (hls) hls.destroy();
+      video.pause();
+      video.src = '';
+      playerModal.style.display = 'none';
+    };
+
+    // إغلاق عند الضغط خارج الفيديو
+    playerModal.addEventListener('click', (e) => {
+      if (e.target === playerModal) {
+        if (hls) hls.destroy();
+        video.pause();
+        video.src = '';
+        playerModal.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
