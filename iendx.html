@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Pro</title>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+<!-- Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+body{
+    margin:0;
+    font-family:'Cairo',sans-serif;
+    background:radial-gradient(circle at top,#020617,#000);
+    color:#fff;
+}
+
+/* HEADER */
+.header{
+    padding:15px;
+    text-align:center;
+    font-size:22px;
+    font-weight:bold;
+    background:rgba(255,255,255,0.05);
+    backdrop-filter:blur(15px);
+}
+
+/* HERO PLAYER */
+.hero{
+    position:relative;
+    height:65vh;
+    margin:15px;
+    border-radius:20px;
+    overflow:hidden;
+    box-shadow:0 0 40px rgba(34,197,94,0.3);
+}
+
+.hero video{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.overlay{
+    position:absolute;
+    bottom:0;
+    width:100%;
+    padding:20px;
+    background:linear-gradient(transparent,rgba(0,0,0,0.9));
+}
+
+.overlay h1{
+    margin:0;
+    font-size:26px;
+}
+
+/* GRID */
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:15px;
+    padding:20px;
+}
+
+/* CARD */
+.card{
+    background:rgba(255,255,255,0.05);
+    border-radius:15px;
+    padding:20px;
+    text-align:center;
+    cursor:pointer;
+    transition:0.3s;
+    border:1px solid rgba(255,255,255,0.08);
+}
+
+.card:hover{
+    transform:translateY(-8px) scale(1.05);
+    background:#22c55e;
+    color:#000;
+    box-shadow:0 0 20px #22c55e;
+}
+
+/* SOCIAL */
+.social{
+    position:fixed;
+    bottom:20px;
+    left:20px;
+    display:flex;
+    gap:12px;
+    z-index:999;
+}
+
+.social a{
+    width:45px;
+    height:45px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+    font-size:20px;
+    color:white;
+    text-decoration:none;
+    transition:0.3s;
+}
+
+/* Snapchat */
+.snap{
+    background:#FFFC00;
+    color:black;
+}
+
+/* X */
+.x{
+    background:#000;
+}
+
+.social a:hover{
+    transform:scale(1.2) rotate(5deg);
+    box-shadow:0 0 15px rgba(255,255,255,0.6);
+}
+
+/* MOBILE */
+@media(max-width:768px){
+    .hero{
+        height:40vh;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">Medo TV</div>
+
+<div class="hero">
+    <video id="player" controls autoplay></video>
+    <div class="overlay">
+        <h1 id="title">اختر قناة</h1>
+    </div>
+</div>
+
+<div class="grid" id="channels"></div>
+
+<!-- SOCIAL -->
+<div class="social">
+    <a href="https://snapchat.com/add/ei_5m" target="_blank" class="snap">
+        <i class="fab fa-snapchat"></i>
+    </a>
+
+    <a href="https://x.com/ei_6m" target="_blank" class="x">
+        <i class="fab fa-x-twitter"></i>
+    </a>
+</div>
+
+<script>
+const channels = [
+{ name:"ثمانية 1", url:"https://dflive.app.tc/20.m3u8"},
+{ name:"ثمانية 2", url:"https://dflive.app.tc/60.m3u8"},
+{ name:"ثمانية 3", url:"https://dflive.app.tc/61.m3u8"},
+{ name:"شاهد سبورت", url:"https://dflive.app.tc/16.m3u8"},
+{ name:"شاشا تيفي", url:"https://dflive.app.tc/12.m3u8"},
+{ name:"beIN 1", url:"https://dflive.app.tc/50.m3u8"},
+{ name:"beIN 2", url:"https://dflive.app.tc/51.m3u8"},
+{ name:"beIN 3", url:"https://dflive.app.tc/52.m3u8"},
+{ name:"beIN 4", url:"https://dflive.app.tc/53.m3u8"},
+{ name:"beIN 5", url:"https://dflive.app.tc/54.m3u8"}
+];
+
+const container = document.getElementById("channels");
+const player = document.getElementById("player");
+const title = document.getElementById("title");
+
+channels.forEach((ch,i)=>{
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerText=ch.name;
+
+    div.onclick=()=>{
+        play(ch.url);
+        title.innerText=ch.name;
+    };
+
+    container.appendChild(div);
+
+    if(i===0) div.click();
+});
+
+function play(url){
+    if(window.hls){ window.hls.destroy(); }
+
+    if(Hls.isSupported()){
+        const hls=new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(player);
+        window.hls=hls;
+    }else{
+        player.src=url;
+    }
+}
+</script>
+
+</body>
+</html>
