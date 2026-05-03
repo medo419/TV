@@ -1,206 +1,147 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live Pro</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRO TV | Live Edition</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        :root { --primary: #22c55e; --bg: #0a0a0a; --surface: #1a1a1a; --text: #ffffff; }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 80px; }
+        
+        .header { padding: 15px; text-align: center; background: #000; border-bottom: 1px solid #222; position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 22px; font-weight: 900; color: var(--primary); }
+        .player-box { width: 100%; max-width: 800px; margin: 10px auto; background: #000; aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; border: 1px solid #333; }
+        video { width: 100%; height: 100%; }
 
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+        .tabs { display: flex; overflow-x: auto; gap: 10px; padding: 15px; scrollbar-width: none; }
+        .tab-btn { background: var(--surface); border: 1px solid #333; color: #ccc; padding: 8px 20px; border-radius: 20px; white-space: nowrap; cursor: pointer; }
+        .tab-btn.active { background: var(--primary); color: #000; font-weight: bold; border-color: var(--primary); }
 
-<!-- Icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+        .content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; padding: 15px; }
+        .item-card { background: var(--surface); border-radius: 10px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid #222; transition: 0.2s; }
+        .item-card:active { transform: scale(0.95); }
+        .item-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block; }
+        .item-card .info { padding: 8px; text-align: center; background: linear-gradient(transparent, rgba(0,0,0,0.9)); position: absolute; bottom: 0; width: 100%; }
+        .item-card .title { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .badge { position: absolute; top: 5px; right: 5px; background: var(--primary); color: #000; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; z-index: 10; }
 
-<style>
-body{
-    margin:0;
-    font-family:'Cairo',sans-serif;
-    background:radial-gradient(circle at top,#020617,#000);
-    color:#fff;
-}
+        #settings-page { display: none; padding: 20px; }
+        .social-link { display: flex; align-items: center; background: var(--surface); padding: 15px; border-radius: 12px; margin-bottom: 10px; text-decoration: none; color: #fff; border: 1px solid #333; }
+        .social-link i { margin-left: 15px; font-size: 20px; }
 
-/* HEADER */
-.header{
-    padding:15px;
-    text-align:center;
-    font-size:22px;
-    font-weight:bold;
-    background:rgba(255,255,255,0.05);
-    backdrop-filter:blur(15px);
-}
+        .bottom-menu { position: fixed; bottom: 0; width: 100%; background: #050505; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #222; z-index: 200; }
+        .menu-item { color: #777; text-align: center; cursor: pointer; font-size: 11px; flex: 1; }
+        .menu-item i { font-size: 22px; display: block; margin-bottom: 3px; }
+        .menu-item.active { color: var(--primary); }
 
-/* HERO PLAYER */
-.hero{
-    position:relative;
-    height:65vh;
-    margin:15px;
-    border-radius:20px;
-    overflow:hidden;
-    box-shadow:0 0 40px rgba(34,197,94,0.3);
-}
-
-.hero video{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-}
-
-.overlay{
-    position:absolute;
-    bottom:0;
-    width:100%;
-    padding:20px;
-    background:linear-gradient(transparent,rgba(0,0,0,0.9));
-}
-
-.overlay h1{
-    margin:0;
-    font-size:26px;
-}
-
-/* GRID */
-.grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-    gap:15px;
-    padding:20px;
-}
-
-/* CARD */
-.card{
-    background:rgba(255,255,255,0.05);
-    border-radius:15px;
-    padding:20px;
-    text-align:center;
-    cursor:pointer;
-    transition:0.3s;
-    border:1px solid rgba(255,255,255,0.08);
-}
-
-.card:hover{
-    transform:translateY(-8px) scale(1.05);
-    background:#22c55e;
-    color:#000;
-    box-shadow:0 0 20px #22c55e;
-}
-
-/* SOCIAL */
-.social{
-    position:fixed;
-    bottom:20px;
-    left:20px;
-    display:flex;
-    gap:12px;
-    z-index:999;
-}
-
-.social a{
-    width:45px;
-    height:45px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    border-radius:50%;
-    font-size:20px;
-    color:white;
-    text-decoration:none;
-    transition:0.3s;
-}
-
-/* Snapchat */
-.snap{
-    background:#FFFC00;
-    color:black;
-}
-
-/* X */
-.x{
-    background:#000;
-}
-
-.social a:hover{
-    transform:scale(1.2) rotate(5deg);
-    box-shadow:0 0 15px rgba(255,255,255,0.6);
-}
-
-/* MOBILE */
-@media(max-width:768px){
-    .hero{
-        height:40vh;
-    }
-}
-</style>
+        .search-area { padding: 0 15px; }
+        .search-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #333; background: var(--surface); color: #fff; outline: none; box-sizing: border-box; }
+    </style>
 </head>
-
 <body>
 
-<div class="header">Medo TV</div>
+<div class="header"><div class="logo">PRO TV</div></div>
 
-<div class="hero">
-    <video id="player" controls autoplay></video>
-    <div class="overlay">
-        <h1 id="title">اختر قناة</h1>
+<div class="player-box"><video id="video-player" controls autoplay playsinline></video></div>
+
+<div id="home-view">
+    <div class="tabs">
+        <div class="tab-btn active" id="t-main" onclick="loadData('https://api.dfkz.site/krmzi/', 'series', 't-main')">الرئيسية</div>
+        <div class="tab-btn" id="t-live" onclick="showLive()">📺 بث مباشر</div>
+        <div class="tab-btn" id="t-latest" onclick="loadData('https://api.dfkz.site/krmzi/?action=lastep', 'episodes', 't-latest')">⚡ الأحدث</div>
     </div>
+    <div class="search-area"><input type="text" class="search-input" placeholder="بحث..." oninput="handleSearch(this.value)"></div>
+    <div class="content-grid" id="main-grid"></div>
 </div>
 
-<div class="grid" id="channels"></div>
+<div id="settings-page">
+    <h2 style="text-align: center; color: var(--primary);">الإعدادات</h2>
+    <a href="https://snapchat.com/add/ei_5m" class="social-link"><i class="fab fa-snapchat" style="color:#FFFC00"></i> سناب شات</a>
+    <a href="https://x.com/ei_6m" class="social-link"><i class="fab fa-x-twitter"></i> منصة إكس</a>
+    <a href="https://t.me/ei_5m" class="social-link"><i class="fab fa-telegram" style="color:#26A5E4"></i> تلجرام</a>
+</div>
 
-<!-- SOCIAL -->
-<div class="social">
-    <a href="https://snapchat.com/add/ei_5m" target="_blank" class="snap">
-        <i class="fab fa-snapchat"></i>
-    </a>
-
-    <a href="https://x.com/ei_6m" target="_blank" class="x">
-        <i class="fab fa-x-twitter"></i>
-    </a>
+<div class="bottom-menu">
+    <div class="menu-item active" id="m-home" onclick="showHome()"><i class="fa fa-home"></i><span>الرئيسية</span></div>
+    <div class="menu-item" id="m-settings" onclick="showSettings()"><i class="fa fa-cog"></i><span>الإعدادات</span></div>
 </div>
 
 <script>
-const channels = [
-{ name:"ثمانية 1", url:"https://dflive.app.tc/20.m3u8"},
-{ name:"ثمانية 2", url:"https://dflive.app.tc/60.m3u8"},
-{ name:"ثمانية 3", url:"https://dflive.app.tc/61.m3u8"},
-{ name:"شاهد سبورت", url:"https://dflive.app.tc/16.m3u8"},
-{ name:"شاشا تيفي", url:"https://dflive.app.tc/12.m3u8"},
-{ name:"beIN 1", url:"https://dflive.app.tc/50.m3u8"},
-{ name:"beIN 2", url:"https://dflive.app.tc/51.m3u8"},
-{ name:"beIN 3", url:"https://dflive.app.tc/52.m3u8"},
-{ name:"beIN 4", url:"https://dflive.app.tc/53.m3u8"},
-{ name:"beIN 5", url:"https://dflive.app.tc/54.m3u8"}
-];
+    const grid = document.getElementById('main-grid');
+    const player = document.getElementById('video-player');
+    let hlsInstance = null;
 
-const container = document.getElementById("channels");
-const player = document.getElementById("player");
-const title = document.getElementById("title");
+    // القنوات الجديدة التي أضفتها
+    const liveChannels = [
+        { title: "قناة ثمانية 1", url: "https://dflive.app.tc/20.m3u8", img: "https://yt3.googleusercontent.com/ytc/AIdro_m9T-77z6o9zE3n3YF5X6P7J2q2z-w=s900-c-k-c0x00ffffff-no-rj" },
+        { title: "قناة ثمانية 2", url: "https://dflive.app.tc/60.m3u8", img: "https://yt3.googleusercontent.com/ytc/AIdro_m9T-77z6o9zE3n3YF5X6P7J2q2z-w=s900-c-k-c0x00ffffff-no-rj" },
+        { title: "قناة ثمانية 3", url: "https://dflive.app.tc/61.m3u8", img: "https://yt3.googleusercontent.com/ytc/AIdro_m9T-77z6o9zE3n3YF5X6P7J2q2z-w=s900-c-k-c0x00ffffff-no-rj" },
+        { title: "شاهد سبورت", url: "https://dflive.app.tc/16.m3u8", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Shahid_Logo.png/640px-Shahid_Logo.png" },
+        { title: "شاشا تيفي", url: "https://dflive.app.tc/12.m3u8", img: "https://shashatv.com/logo.png" },
+        { title: "beIN Sports 1", url: "https://dflive.app.tc/50.m3u8", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/BeIN_Sports_logo.svg/2560px-BeIN_Sports_logo.svg.png" },
+        { title: "beIN Sports 2", url: "https://dflive.app.tc/51.m3u8", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/BeIN_Sports_logo.svg/2560px-BeIN_Sports_logo.svg.png" },
+        { title: "beIN Sports 3", url: "https://dflive.app.tc/52.m3u8", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/BeIN_Sports_logo.svg/2560px-BeIN_Sports_logo.svg.png" },
+        { title: "beIN Sports 4", url: "https://dflive.app.tc/53.m3u8", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/BeIN_Sports_logo.svg/2560px-BeIN_Sports_logo.svg.png" },
+        { title: "beIN Sports 5", url: "https://dflive.app.tc/54.m3u8", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/BeIN_Sports_logo.svg/2560px-BeIN_Sports_logo.svg.png" }
+    ];
 
-channels.forEach((ch,i)=>{
-    const div=document.createElement("div");
-    div.className="card";
-    div.innerText=ch.name;
-
-    div.onclick=()=>{
-        play(ch.url);
-        title.innerText=ch.name;
-    };
-
-    container.appendChild(div);
-
-    if(i===0) div.click();
-});
-
-function play(url){
-    if(window.hls){ window.hls.destroy(); }
-
-    if(Hls.isSupported()){
-        const hls=new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(player);
-        window.hls=hls;
-    }else{
-        player.src=url;
+    async function loadData(url, type, tabId) {
+        grid.innerHTML = '<div style="text-align:center;width:100%;padding:20px;">جاري التحميل...</div>';
+        if(tabId) updateTabs(tabId);
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            let list = data.series || data.episodes || data.eps || data.data || (Array.isArray(data) ? data : []);
+            render(list, type);
+        } catch (e) { grid.innerHTML = 'خطأ في جلب البيانات'; }
     }
-}
-</script>
 
+    function render(items, type) {
+        grid.innerHTML = "";
+        items.forEach((item, idx) => {
+            const card = document.createElement('div');
+            card.className = 'item-card';
+            // الترقيم يظهر فقط في قائمة الحلقات أو الأحدث
+            let badge = (type === 'episodes') ? `<div class="badge">حلقة ${item.title.match(/\d+/)?.[0] || (idx+1)}</div>` : "";
+            card.innerHTML = `${badge}<img src="${item.img || item.image || 'https://via.placeholder.com/150x225/111/fff?text=TV'}" loading="lazy"><div class="info"><div class="title">${item.title}</div></div>`;
+            card.onclick = () => {
+                if(type === 'live') playStream(item.url);
+                else if(type === 'episodes') playVideo(item.id || item.epid);
+                else loadData(`https://api.dfkz.site/krmzi/series.php?id=${item.id || item.epid}`, 'episodes', null);
+            };
+            grid.appendChild(card);
+        });
+    }
+
+    function playStream(url) {
+        if (hlsInstance) hlsInstance.destroy();
+        if (Hls.isSupported()) { hlsInstance = new Hls(); hlsInstance.loadSource(url); hlsInstance.attachMedia(player); } 
+        else { player.src = url; }
+        player.play();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function playVideo(id) {
+        fetch(`https://api.dfkz.site/krmzi/ep.php?epid=${id}`).then(r => r.json()).then(d => {
+            let streamUrl = "";
+            const find = (o) => { for(let k in o) { if(typeof o[k] === 'string' && o[k].includes('.m3u8')) streamUrl = o[k]; else if(typeof o[k] === 'object') find(o[k]); } };
+            find(d);
+            if(streamUrl) playStream(streamUrl);
+        });
+    }
+
+    function showLive() { updateTabs('t-live'); render(liveChannels, 'live'); }
+    function showHome() { document.getElementById('home-view').style.display='block'; document.getElementById('settings-page').style.display='none'; document.getElementById('m-home').classList.add('active'); document.getElementById('m-settings').classList.remove('active'); loadData('https://api.dfkz.site/krmzi/', 'series', 't-main'); }
+    function showSettings() { document.getElementById('home-view').style.display='none'; document.getElementById('settings-page').style.display='block'; document.getElementById('m-settings').classList.add('active'); document.getElementById('m-home').classList.remove('active'); }
+    function updateTabs(id) { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+    
+    let timer;
+    function handleSearch(v) { clearTimeout(timer); timer = setTimeout(() => { if(v.length < 2) return; loadData(`https://api.dfkz.site/krmzi/?q=${encodeURIComponent(v)}`, 'series', null); }, 700); }
+
+    showHome();
+</script>
 </body>
 </html>
