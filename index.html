@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRO TV | Live Edition</title>
+    <title>PRO TV | GitHub Edition</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         :root { --primary: #22c55e; --bg: #0a0a0a; --surface: #1a1a1a; --text: #ffffff; }
-        body { margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 80px; }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 80px; overflow-x: hidden; }
         
         .header { padding: 15px; text-align: center; background: #000; border-bottom: 1px solid #222; position: sticky; top: 0; z-index: 100; }
         .logo { font-size: 22px; font-weight: 900; color: var(--primary); }
@@ -16,12 +16,12 @@
         video { width: 100%; height: 100%; }
 
         .tabs { display: flex; overflow-x: auto; gap: 10px; padding: 15px; scrollbar-width: none; }
-        .tab-btn { background: var(--surface); border: 1px solid #333; color: #ccc; padding: 8px 20px; border-radius: 20px; white-space: nowrap; cursor: pointer; }
+        .tab-btn { background: var(--surface); border: 1px solid #333; color: #ccc; padding: 8px 20px; border-radius: 20px; white-space: nowrap; cursor: pointer; transition: 0.3s; }
         .tab-btn.active { background: var(--primary); color: #000; font-weight: bold; border-color: var(--primary); }
 
         .content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; padding: 15px; }
         .item-card { background: var(--surface); border-radius: 10px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid #222; transition: 0.2s; }
-        .item-card:active { transform: scale(0.95); }
+        .item-card:hover { border-color: var(--primary); }
         .item-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block; }
         .item-card .info { padding: 8px; text-align: center; background: linear-gradient(transparent, rgba(0,0,0,0.9)); position: absolute; bottom: 0; width: 100%; }
         .item-card .title { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -53,7 +53,7 @@
         <div class="tab-btn" id="t-live" onclick="showLive()">📺 بث مباشر</div>
         <div class="tab-btn" id="t-latest" onclick="loadData('https://api.dfkz.site/krmzi/?action=lastep', 'episodes', 't-latest')">⚡ الأحدث</div>
     </div>
-    <div class="search-area"><input type="text" class="search-input" placeholder="بحث..." oninput="handleSearch(this.value)"></div>
+    <div class="search-area"><input type="text" class="search-input" placeholder="بحث عن مسلسل..." oninput="handleSearch(this.value)"></div>
     <div class="content-grid" id="main-grid"></div>
 </div>
 
@@ -74,7 +74,6 @@
     const player = document.getElementById('video-player');
     let hlsInstance = null;
 
-    // القنوات الجديدة التي أضفتها
     const liveChannels = [
         { title: "قناة ثمانية 1", url: "https://dflive.app.tc/20.m3u8", img: "https://yt3.googleusercontent.com/ytc/AIdro_m9T-77z6o9zE3n3YF5X6P7J2q2z-w=s900-c-k-c0x00ffffff-no-rj" },
         { title: "قناة ثمانية 2", url: "https://dflive.app.tc/60.m3u8", img: "https://yt3.googleusercontent.com/ytc/AIdro_m9T-77z6o9zE3n3YF5X6P7J2q2z-w=s900-c-k-c0x00ffffff-no-rj" },
@@ -89,24 +88,39 @@
     ];
 
     async function loadData(url, type, tabId) {
-        grid.innerHTML = '<div style="text-align:center;width:100%;padding:20px;">جاري التحميل...</div>';
+        grid.innerHTML = '<div style="text-align:center;width:100%;padding:20px;color:var(--primary);">جاري تحميل البيانات...</div>';
         if(tabId) updateTabs(tabId);
+        
+        // إجبار الرابط على HTTPS ليعمل على GitHub
+        const secureUrl = url.replace("http://", "https://");
+        
         try {
-            const res = await fetch(url);
+            const res = await fetch(secureUrl);
             const data = await res.json();
             let list = data.series || data.episodes || data.eps || data.data || (Array.isArray(data) ? data : []);
             render(list, type);
-        } catch (e) { grid.innerHTML = 'خطأ في جلب البيانات'; }
+        } catch (e) { 
+            grid.innerHTML = '<div style="text-align:center;width:100%;padding:20px;">خطأ: الـ API لا يستجيب بشكل آمن (HTTPS). حاول تحديث الصفحة.</div>'; 
+        }
     }
 
     function render(items, type) {
         grid.innerHTML = "";
+        if(!items || items.length === 0) { grid.innerHTML = '<div style="text-align:center;width:100%;">لا توجد نتائج</div>'; return; }
+        
         items.forEach((item, idx) => {
             const card = document.createElement('div');
             card.className = 'item-card';
-            // الترقيم يظهر فقط في قائمة الحلقات أو الأحدث
+            
+            // رقم الحلقة يظهر فقط في قسم الحلقات أو الأحدث
             let badge = (type === 'episodes') ? `<div class="badge">حلقة ${item.title.match(/\d+/)?.[0] || (idx+1)}</div>` : "";
-            card.innerHTML = `${badge}<img src="${item.img || item.image || 'https://via.placeholder.com/150x225/111/fff?text=TV'}" loading="lazy"><div class="info"><div class="title">${item.title}</div></div>`;
+            
+            card.innerHTML = `
+                ${badge}
+                <img src="${(item.img || item.image || '').replace('http://', 'https://') || 'https://via.placeholder.com/150x225/111/fff?text=TV'}" loading="lazy">
+                <div class="info"><div class="title">${item.title}</div></div>
+            `;
+
             card.onclick = () => {
                 if(type === 'live') playStream(item.url);
                 else if(type === 'episodes') playVideo(item.id || item.epid);
@@ -118,28 +132,57 @@
 
     function playStream(url) {
         if (hlsInstance) hlsInstance.destroy();
-        if (Hls.isSupported()) { hlsInstance = new Hls(); hlsInstance.loadSource(url); hlsInstance.attachMedia(player); } 
-        else { player.src = url; }
+        const secureStream = url.replace("http://", "https://");
+        if (Hls.isSupported()) { 
+            hlsInstance = new Hls(); hlsInstance.loadSource(secureStream); hlsInstance.attachMedia(player); 
+        } else { 
+            player.src = secureStream; 
+        }
         player.play();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function playVideo(id) {
-        fetch(`https://api.dfkz.site/krmzi/ep.php?epid=${id}`).then(r => r.json()).then(d => {
+        const url = `https://api.dfkz.site/krmzi/ep.php?epid=${id}`;
+        fetch(url).then(r => r.json()).then(d => {
             let streamUrl = "";
             const find = (o) => { for(let k in o) { if(typeof o[k] === 'string' && o[k].includes('.m3u8')) streamUrl = o[k]; else if(typeof o[k] === 'object') find(o[k]); } };
             find(d);
             if(streamUrl) playStream(streamUrl);
-        });
+        }).catch(e => alert("خطأ في تشغيل الفيديو"));
     }
 
     function showLive() { updateTabs('t-live'); render(liveChannels, 'live'); }
-    function showHome() { document.getElementById('home-view').style.display='block'; document.getElementById('settings-page').style.display='none'; document.getElementById('m-home').classList.add('active'); document.getElementById('m-settings').classList.remove('active'); loadData('https://api.dfkz.site/krmzi/', 'series', 't-main'); }
-    function showSettings() { document.getElementById('home-view').style.display='none'; document.getElementById('settings-page').style.display='block'; document.getElementById('m-settings').classList.add('active'); document.getElementById('m-home').classList.remove('active'); }
-    function updateTabs(id) { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+    
+    function showHome() { 
+        document.getElementById('home-view').style.display='block'; 
+        document.getElementById('settings-page').style.display='none'; 
+        document.getElementById('m-home').classList.add('active'); 
+        document.getElementById('m-settings').classList.remove('active'); 
+        loadData('https://api.dfkz.site/krmzi/', 'series', 't-main'); 
+    }
+    
+    function showSettings() { 
+        document.getElementById('home-view').style.display='none'; 
+        document.getElementById('settings-page').style.display='block'; 
+        document.getElementById('m-settings').classList.add('active'); 
+        document.getElementById('m-home').classList.remove('active'); 
+    }
+    
+    function updateTabs(id) { 
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); 
+        const tab = document.getElementById(id);
+        if(tab) tab.classList.add('active'); 
+    }
     
     let timer;
-    function handleSearch(v) { clearTimeout(timer); timer = setTimeout(() => { if(v.length < 2) return; loadData(`https://api.dfkz.site/krmzi/?q=${encodeURIComponent(v)}`, 'series', null); }, 700); }
+    function handleSearch(v) { 
+        clearTimeout(timer); 
+        timer = setTimeout(() => { 
+            if(v.length < 2) return; 
+            loadData(`https://api.dfkz.site/krmzi/?q=${encodeURIComponent(v)}`, 'series', null); 
+        }, 700); 
+    }
 
     showHome();
 </script>
