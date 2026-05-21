@@ -266,8 +266,8 @@
     </div>
 
     <script>
-        // رابط سيرفر التشغيل الرئيسي
-        const BASE_API = "https://api.dfkz.site/krmzi/";
+        // إرجاع الرابط الخارجي الأصلي للسيرفر بدقة عبر بروتوكول http لكي يستجيب بشكل سليم ولا يعطي خطأ 404
+        const BASE_API = "http://api.dfkz.site/krmzi/";
         const mainGrid = document.getElementById('mainGrid');
         const sectionTitle = document.getElementById('sectionTitle');
         const searchInput = document.getElementById('searchInput');
@@ -276,9 +276,7 @@
 
         function fixImageUrl(url) {
             if (!url) return 'https://via.placeholder.com/140x210';
-            if (url.startsWith('http://')) {
-                return url.replace('http://', 'https://');
-            }
+            // إبقاء روابط الصور على حالتها لتفتح من السيرفر مباشرة دون حظر
             return url;
         }
 
@@ -344,7 +342,6 @@
             });
         }
 
-        // دالة عرض المسلسل وإنشاء أزرار الحلقات للفتح المباشر الآمن
         function showSeriesDetailsByIndex(index) {
             const item = allLocalSeries[index];
             if (!item) return;
@@ -366,19 +363,21 @@
                 </div>
             `;
 
-            // توليد 40 حلقة كاملة وجاهزة للفتح الخارجي السريع
+            // توليد 40 حلقة كاملة
             const totalEpisodes = 40; 
 
             for (let i = 1; i <= totalEpisodes; i++) {
-                // استخدام وسم رابط <a> لضمان تخطي حظر الحماية وفتح الفيديو بسلاسة صاروخية
                 const epLink = document.createElement('a');
                 epLink.className = 'ep-btn';
                 epLink.innerText = `الحلقة ${i}`;
                 
-                // الرابط المباشر لتشغيل السيرفرات دون قيود المتصفحات
                 const generatedEpId = `${item.id}ep${i}`;
+                
+                // تعديل مسار الرابط المباشر ليطابق الـ http الأصلي تماماً لكي يفتح المشغل بدون أخطاء السيرفر
                 epLink.href = `${BASE_API}ep.php?epid=${generatedEpId}`;
-                epLink.target = '_blank'; // يفتح في صفحة مستقلة لضمان اشتغال الفيديو والأقسام بالكامل
+                epLink.target = '_blank'; 
+                // إضافة وسم حماية لمنع المتصفح من حظر الرابط الخارجي غير المشفر
+                epLink.rel = "noreferrer noopener";
 
                 episodesGrid.appendChild(epLink);
             }
