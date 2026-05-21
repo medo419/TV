@@ -289,7 +289,6 @@
     </div>
 
     <script>
-        // الرابط الخارجي الأساسي للتشغيل والسيرفرات
         const BASE_API = "https://api.dfkz.site/krmzi/";
         const mainGrid = document.getElementById('mainGrid');
         const sectionTitle = document.getElementById('sectionTitle');
@@ -297,7 +296,7 @@
         
         let allLocalSeries = [];
 
-        // تصحيح بروتوكول روابط الصور تلقائياً لضمان ظهور البوسترات بشكل آمن
+        // تصحيح بروتوكول الصور لتعمل بشكل آمن تماماً
         function fixImageUrl(url) {
             if (!url) return 'https://via.placeholder.com/140x210';
             if (url.startsWith('http://')) {
@@ -306,10 +305,10 @@
             return url;
         }
 
-        // جلب البيانات من ملفك بحالة الأحرف الصحيحة krmzi.json الصغيرة ليعمل على جيت هاب
+        // جلب البيانات بدقة من krmzi.json الصغير المتوافق مع الرفع الحالي
         async function loadLocalJSON() {
             try {
-                const response = await fetch('krmzi.json'); // تعديل الحرف الصغير هنا بدقة
+                const response = await fetch('krmzi.json'); 
                 const data = await response.json();
                 if(data && data.series) {
                     allLocalSeries = data.series;
@@ -319,7 +318,7 @@
                 }
             } catch (error) {
                 console.error("Error loading JSON:", error);
-                mainGrid.innerHTML = '<div class="status-msg">خطأ في جلب البيانات، يرجى التحقق من رفع ملف krmzi.json بشكل صحيح.</div>';
+                mainGrid.innerHTML = '<div class="status-msg">خطأ في قراءة البيانات، يرجى التحقق من الملف المرفوع.</div>';
             }
         }
 
@@ -352,10 +351,12 @@
 
         function renderGrid(items) {
             mainGrid.innerHTML = '';
-            items.forEach(item => {
+            items.forEach((item, index) => {
                 const card = document.createElement('div');
                 card.className = 'card';
-                card.onclick = () => showSeriesDetailsLocal(item);
+                
+                // هنا تم إصلاح الربط بدقة ليستدعي الدالة الصحيحة عند الضغط بـ Index مخصص
+                card.onclick = () => showSeriesDetailsByIndex(index);
 
                 const securedImg = fixImageUrl(item.image);
 
@@ -369,8 +370,11 @@
             });
         }
 
-        // إنشاء قائمة الحلقات محلياً بدون إرسال طلبات للسيرفر الخارجي لتخطي مشاكل الـ CORS بالكامل
-        function showSeriesDetailsLocal(item) {
+        // الدالة المحدثة والمربوطة بالكامل لعرض التفاصيل وتوليد الحلقات الـ 40 مباشرة
+        function showSeriesDetailsByIndex(index) {
+            const item = allLocalSeries[index];
+            if (!item) return;
+
             const modal = document.getElementById('detailsModal');
             const detailsContainer = document.getElementById('modalDetails');
             const episodesGrid = document.getElementById('episodesGrid');
@@ -392,7 +396,7 @@
                 </div>
             `;
 
-            // توليد 40 حلقة تلقائياً لكل مسلسل لضمان التشغيل الفوري لجميع الحلقات المتاحة
+            // توليد 40 حلقة تلقائياً ومباشرة لكل مسلسل لتغطية الحلقات بالكامل
             const totalEpisodes = 40; 
 
             for (let i = 1; i <= totalEpisodes; i++) {
@@ -404,7 +408,7 @@
                     document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
                     epBtn.classList.add('active');
                     
-                    // توليد كود الحلقة التابع لنظام سيرفر البث الخارجي
+                    // توليد كود البث الفريد للسيرفر المشغل
                     const generatedEpId = `${item.id}ep${i}`;
                     watchEpisode(generatedEpId);
                 };
@@ -412,7 +416,7 @@
             }
         }
 
-        // تشغيل البث المباشر داخل الـ Iframe بشكل فوري
+        // تشغيل البث بشكل فوري آمن ومستقر داخل الموقع
         function watchEpisode(episodeId) {
             const playerContainer = document.getElementById('playerContainer');
             playerContainer.style.display = 'block';
@@ -433,7 +437,6 @@
             searchLocalSeries(e.target.value);
         });
 
-        // تشغيل كود جلب البيانات تلقائياً عند فتح الموقع
         window.onload = loadLocalJSON;
     </script>
 </body>
