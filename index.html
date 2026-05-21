@@ -298,7 +298,7 @@
     <div class="container">
         <h2 id="sectionTitle" class="section-title">جميع المسلسلات المتاحة</h2>
         <div id="mainGrid" class="grid">
-            <div class="status-msg">جاري تحميل مسلسلاتك...</div>
+            <div class="status-msg">جاري تحميل مسلسلاتك البصرية...</div>
         </div>
     </div>
 
@@ -315,14 +315,18 @@
     </div>
 
     <script>
+        // تغيير الرابط الخارجي ليصبح ببروتوكول آمن https لتجنب أخطاء حظر المحتوى المختلط (Mixed Content)
         const BASE_API = "https://api.dfkz.site/krmzi/";
+        // استخدام بروكسي بديل مخصص ومستقر لتخطي CORS على الصفحات المرفوعة
+        const CORS_PROXY = "https://corsproxy.io/?url=";
+
         const mainGrid = document.getElementById('mainGrid');
         const sectionTitle = document.getElementById('sectionTitle');
         const searchInput = document.getElementById('searchInput');
         
         let allLocalSeries = [];
 
-        // تحويل روابط الصور تلقائياً إلى بروتوكول آمن لمنع مشكلة الصور المكسورة
+        // تصحيح فوري لروابط الصور
         function fixImageUrl(url) {
             if (!url) return 'https://via.placeholder.com/140x210';
             if (url.startsWith('http://')) {
@@ -331,20 +335,20 @@
             return url;
         }
 
-        // جلب البيانات محلياً
+        // جلب البيانات من الملف المحلي المرفوع بنجاح
         async function loadLocalJSON() {
             try {
-                const response = await fetch('krmzi.json'); 
+                const response = await fetch('Krmzi.json'); 
                 const data = await response.json();
                 if(data && data.series) {
                     allLocalSeries = data.series;
                     displayAllLocalSeries();
                 } else {
-                    mainGrid.innerHTML = '<div class="status-msg">تأكد من وجود ملف krmzi.json بجانب صفحة الـ html.</div>';
+                    mainGrid.innerHTML = '<div class="status-msg">تأكد من وجود ملف Krmzi.json بجانب الـ html.</div>';
                 }
             } catch (error) {
                 console.error("Error loading JSON:", error);
-                mainGrid.innerHTML = '<div class="status-msg">يرجى تشغيل الملف عبر خادم محلي (Local Server) أو رفعه على استضافة ويب حقيقية ليعمل جلب البيانات بنجاح.</div>';
+                mainGrid.innerHTML = '<div class="status-msg">تعذر جلب ملف المسلسلات، تأكد من حالة الأحرف لملف الـ json.</div>';
             }
         }
 
@@ -354,7 +358,7 @@
             if(allLocalSeries.length > 0) {
                 renderGrid(allLocalSeries, 'series');
             } else {
-                mainGrid.innerHTML = '<div class="status-msg">جاري جلب البيانات...</div>';
+                mainGrid.innerHTML = '<div class="status-msg">جاري بناء الواجهة...</div>';
             }
         }
 
@@ -373,26 +377,28 @@
             if(filtered.length > 0) {
                 renderGrid(filtered, 'series');
             } else {
-                mainGrid.innerHTML = '<div class="status-msg">لا توجد نتائج تطابق هذا الاسم.</div>';
+                mainGrid.innerHTML = '<div class="status-msg">لا توجد نتائج تطابق هذا العمل.</div>';
             }
         }
 
+        // جلب الحلقات الأخيرة بشكل آمن تماماً عبر البروكسي المحدث
         async function loadLastEpisodes() {
             setActiveButton('btnLast');
             sectionTitle.innerText = "آخر الحلقات المضافة حديثاً";
-            mainGrid.innerHTML = '<div class="status-msg">جاري إحضار الحلقات الحديثة...</div>';
+            mainGrid.innerHTML = '<div class="status-msg">جاري إحضار التحديثات بآمان...</div>';
 
             try {
-                const response = await fetch(`${BASE_API}?action=lastep`);
+                const targetUrl = `${BASE_API}?action=lastep`;
+                const response = await fetch(CORS_PROXY + encodeURIComponent(targetUrl));
                 const data = await response.json();
                 const items = data.series || data; 
                 if(items && items.length > 0) {
                     renderGrid(items, 'episode');
                 } else {
-                    mainGrid.innerHTML = '<div class="status-msg">لا توجد حلقات حديثة مضافة حالياً.</div>';
+                    mainGrid.innerHTML = '<div class="status-msg">لا توجد حلقات مضافة حالياً.</div>';
                 }
             } catch (error) {
-                mainGrid.innerHTML = '<div class="status-msg">السيرفر يمنع جلب الحلقات الأخيرة حالياً بسبب قيود الأمان (CORS).</div>';
+                mainGrid.innerHTML = '<div class="status-msg">السيرفر يرفض التمرير بالوقت الحالي، حاول لاحقاً.</div>';
             }
         }
 
@@ -408,7 +414,6 @@
                     card.onclick = () => watchEpisode(item.id); 
                 }
 
-                // استخدام دالة تصحيح مسار الصورة هنا
                 const securedImg = fixImageUrl(item.image);
 
                 card.innerHTML = `
@@ -421,6 +426,7 @@
             });
         }
 
+        // فتح المودال وجلب الحلقات بشكل مستقر بالكامل عبر الـ Proxy
         async function showSeriesDetails(seriesId) {
             const modal = document.getElementById('detailsModal');
             const detailsContainer = document.getElementById('modalDetails');
@@ -429,13 +435,14 @@
             
             playerContainer.style.display = 'none';
             playerContainer.innerHTML = '';
-            detailsContainer.innerHTML = '<p class="status-msg">جاري تحميل تفاصيل الحلقات...</p>';
+            detailsContainer.innerHTML = '<p class="status-msg">جاري معالجة وسحب الحلقات والتفاصيل...</p>';
             episodesGrid.innerHTML = '';
             
             modal.classList.add('active');
 
             try {
-                const response = await fetch(`${BASE_API}series.php?id=${seriesId}`);
+                const targetUrl = `${BASE_API}series.php?id=${seriesId}`;
+                const response = await fetch(CORS_PROXY + encodeURIComponent(targetUrl));
                 const data = await response.json();
 
                 const securedPoster = fixImageUrl(data.image);
@@ -461,14 +468,15 @@
                         episodesGrid.appendChild(epBtn);
                     });
                 } else {
-                    episodesGrid.innerHTML = '<p class="status-msg">لا توجد حلقات مدرجة لهذا العمل حالياً.</p>';
+                    episodesGrid.innerHTML = '<p class="status-msg">لا توجد حلقات مدرجة لهذا العمل.</p>';
                 }
 
             } catch (error) {
-                detailsContainer.innerHTML = '<h2 style="font-size:16px; color:var(--accent-color);">عذراً، السيرفر الخارجي يمنع عرض تفاصيل هذا المسلسل عبر المتصفح (CORS Error).</h2>';
+                detailsContainer.innerHTML = '<h2 style="font-size:15px; color:var(--accent-color); text-align: center;">عذراً، تعذر الاتصال بالسيرفر وجلب الحلقات حالياً.</h2>';
             }
         }
 
+        // تشغيل الفيديو بشكل مباشر داخل الموقع
         function watchEpisode(episodeId) {
             const playerContainer = document.getElementById('playerContainer');
             playerContainer.style.display = 'block';
