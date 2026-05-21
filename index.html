@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سينما قرمزي | للمسلسلات</title>
+    <style>
+        /* --- الألوان والتنسيق العام --- */
+        :root {
+            --bg-color: #0b0f17;
+            --card-bg: #151f30;
+            --accent-color: #ff2a5f;
+            --hover-color: #ff527b;
+            --text-color: #ffffff;
+            --text-secondary: #8f9cae;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* --- الهيدر والقائمة --- */
+        header {
+            background-color: rgba(21, 31, 48, 0.95);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            background-color: transparent;
+            border: 2px solid var(--accent-color);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover, .btn.active {
+            background-color: var(--accent-color);
+            box-shadow: 0 0 15px rgba(255, 42, 95, 0.4);
+        }
+
+        /* --- شريط البحث --- */
+        .search-container {
+            position: relative;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: none;
+            background-color: #222e43;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        /* --- الحاوية والشبكة --- */
+        .container {
+            max-width: 1300px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .section-title {
+            font-size: 22px;
+            margin-bottom: 20px;
+            border-right: 4px solid var(--accent-color);
+            padding-right: 10px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 20px;
+        }
+
+        /* --- كرت المسلسل --- */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 25px rgba(255, 42, 95, 0.2);
+        }
+
+        .card-img-wrapper {
+            position: relative;
+            width: 100%;
+            height: 210px;
+            overflow: hidden;
+            background-color: #121924;
+        }
+
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .card:hover img {
+            transform: scale(1.05);
+        }
+
+        .card-title {
+            padding: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            margin: 0;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* --- النافذة المنبثقة (Modal) --- */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            width: 95%;
+            max-width: 900px;
+            height: 90vh;
+            border-radius: 16px;
+            overflow-y: auto;
+            position: relative;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        /* --- تفاصيل المسلسل والمشغل --- */
+        .details-header {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 30px;
+            align-items: center;
+        }
+
+        .details-poster {
+            width: 120px;
+            height: 170px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .player-container {
+            width: 100%;
+            height: 450px;
+            background-color: #000;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: none;
+        }
+
+        .player-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 12px;
+        }
+
+        /* --- قائمة الحلقات --- */
+        .episodes-section h3 {
+            margin-bottom: 15px;
+            border-bottom: 2px solid #222e43;
+            padding-bottom: 8px;
+        }
+
+        .episodes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 10px;
+        }
+
+        .ep-btn {
+            background-color: #222e43;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .ep-btn:hover, .ep-btn.active {
+            background-color: var(--accent-color);
+        }
+
+        .status-msg {
+            text-align: center;
+            font-size: 18px;
+            color: var(--text-secondary);
+            grid-column: 1 / -1;
+            padding: 40px 0;
+        }
+
+        @media (max-width: 768px) {
+            header { flex-direction: column; gap: 15px; padding: 15px; }
+            .search-container { max-width: 100%; }
+            .details-header { flex-direction: column; text-align: center; }
+            .player-container { height: 230px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="#" class="logo" onclick="displayAllLocalSeries()">🎬 سينما قرمزي</a>
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="ابحث عن مسلسل...">
+        </div>
+        <div class="nav-buttons">
+            <button class="btn active" id="btnAll" onclick="displayAllLocalSeries()">كل المسلسلات</button>
+            <button class="btn" id="btnLast" onclick="loadLastEpisodes()">آخر الحلقات</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <h2 id="sectionTitle" class="section-title">جميع المسلسلات المتاحة</h2>
+        <div id="mainGrid" class="grid">
+            <div class="status-msg">جاري تحميل مسلسلاتك...</div>
+        </div>
+    </div>
+
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal()">✕</button>
+            <div id="playerContainer" class="player-container"></div>
+            <div id="modalDetails" class="details-header"></div>
+            <div class="episodes-section">
+                <h3>حلقات المسلسل</h3>
+                <div id="episodesGrid" class="episodes-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_API = "https://api.dfkz.site/krmzi/";
+        const mainGrid = document.getElementById('mainGrid');
+        const sectionTitle = document.getElementById('sectionTitle');
+        const searchInput = document.getElementById('searchInput');
+        
+        let allLocalSeries = [];
+
+        // تحويل روابط الصور تلقائياً إلى بروتوكول آمن لمنع مشكلة الصور المكسورة
+        function fixImageUrl(url) {
+            if (!url) return 'https://via.placeholder.com/140x210';
+            if (url.startsWith('http://')) {
+                return url.replace('http://', 'https://');
+            }
+            return url;
+        }
+
+        // جلب البيانات محلياً
+        async function loadLocalJSON() {
+            try {
+                const response = await fetch('krmzi.json'); 
+                const data = await response.json();
+                if(data && data.series) {
+                    allLocalSeries = data.series;
+                    displayAllLocalSeries();
+                } else {
+                    mainGrid.innerHTML = '<div class="status-msg">تأكد من وجود ملف krmzi.json بجانب صفحة الـ html.</div>';
+                }
+            } catch (error) {
+                console.error("Error loading JSON:", error);
+                mainGrid.innerHTML = '<div class="status-msg">يرجى تشغيل الملف عبر خادم محلي (Local Server) أو رفعه على استضافة ويب حقيقية ليعمل جلب البيانات بنجاح.</div>';
+            }
+        }
+
+        function displayAllLocalSeries() {
+            setActiveButton('btnAll');
+            sectionTitle.innerText = "جميع المسلسلات المتاحة";
+            if(allLocalSeries.length > 0) {
+                renderGrid(allLocalSeries, 'series');
+            } else {
+                mainGrid.innerHTML = '<div class="status-msg">جاري جلب البيانات...</div>';
+            }
+        }
+
+        function searchLocalSeries(query) {
+            if(!query.trim()) {
+                displayAllLocalSeries();
+                return;
+            }
+            setActiveButton('');
+            sectionTitle.innerText = `نتائج البحث عن: ${query}`;
+            
+            const filtered = allLocalSeries.filter(item => 
+                item.title.toLowerCase().includes(query.toLowerCase())
+            );
+
+            if(filtered.length > 0) {
+                renderGrid(filtered, 'series');
+            } else {
+                mainGrid.innerHTML = '<div class="status-msg">لا توجد نتائج تطابق هذا الاسم.</div>';
+            }
+        }
+
+        async function loadLastEpisodes() {
+            setActiveButton('btnLast');
+            sectionTitle.innerText = "آخر الحلقات المضافة حديثاً";
+            mainGrid.innerHTML = '<div class="status-msg">جاري إحضار الحلقات الحديثة...</div>';
+
+            try {
+                const response = await fetch(`${BASE_API}?action=lastep`);
+                const data = await response.json();
+                const items = data.series || data; 
+                if(items && items.length > 0) {
+                    renderGrid(items, 'episode');
+                } else {
+                    mainGrid.innerHTML = '<div class="status-msg">لا توجد حلقات حديثة مضافة حالياً.</div>';
+                }
+            } catch (error) {
+                mainGrid.innerHTML = '<div class="status-msg">السيرفر يمنع جلب الحلقات الأخيرة حالياً بسبب قيود الأمان (CORS).</div>';
+            }
+        }
+
+        function renderGrid(items, type) {
+            mainGrid.innerHTML = '';
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                if(type === 'series') {
+                    card.onclick = () => showSeriesDetails(item.id);
+                } else {
+                    card.onclick = () => watchEpisode(item.id); 
+                }
+
+                // استخدام دالة تصحيح مسار الصورة هنا
+                const securedImg = fixImageUrl(item.image);
+
+                card.innerHTML = `
+                    <div class="card-img-wrapper">
+                        <img src="${securedImg}" alt="${item.title}" loading="lazy">
+                    </div>
+                    <h3 class="card-title" title="${item.title}">${item.title}</h3>
+                `;
+                mainGrid.appendChild(card);
+            });
+        }
+
+        async function showSeriesDetails(seriesId) {
+            const modal = document.getElementById('detailsModal');
+            const detailsContainer = document.getElementById('modalDetails');
+            const episodesGrid = document.getElementById('episodesGrid');
+            const playerContainer = document.getElementById('playerContainer');
+            
+            playerContainer.style.display = 'none';
+            playerContainer.innerHTML = '';
+            detailsContainer.innerHTML = '<p class="status-msg">جاري تحميل تفاصيل الحلقات...</p>';
+            episodesGrid.innerHTML = '';
+            
+            modal.classList.add('active');
+
+            try {
+                const response = await fetch(`${BASE_API}series.php?id=${seriesId}`);
+                const data = await response.json();
+
+                const securedPoster = fixImageUrl(data.image);
+
+                detailsContainer.innerHTML = `
+                    <img src="${securedPoster}" class="details-poster" alt="${data.title}">
+                    <div>
+                        <h2 style="font-size: 18px; margin: 0 0 5px 0;">${data.title}</h2>
+                        <p style="color: var(--text-secondary); margin: 0; font-size: 13px;">المعرف المرجعي: ${data.id}</p>
+                    </div>
+                `;
+
+                if(data.episodes && data.episodes.length > 0) {
+                    data.episodes.forEach((ep, index) => {
+                        const epBtn = document.createElement('button');
+                        epBtn.className = 'ep-btn';
+                        epBtn.innerText = ep.title || `حلقة ${index + 1}`;
+                        epBtn.onclick = () => {
+                            document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
+                            epBtn.classList.add('active');
+                            watchEpisode(ep.id);
+                        };
+                        episodesGrid.appendChild(epBtn);
+                    });
+                } else {
+                    episodesGrid.innerHTML = '<p class="status-msg">لا توجد حلقات مدرجة لهذا العمل حالياً.</p>';
+                }
+
+            } catch (error) {
+                detailsContainer.innerHTML = '<h2 style="font-size:16px; color:var(--accent-color);">عذراً، السيرفر الخارجي يمنع عرض تفاصيل هذا المسلسل عبر المتصفح (CORS Error).</h2>';
+            }
+        }
+
+        function watchEpisode(episodeId) {
+            const playerContainer = document.getElementById('playerContainer');
+            playerContainer.style.display = 'block';
+            playerContainer.innerHTML = `
+                <iframe src="${BASE_API}ep.php?epid=${episodeId}" allowfullscreen scrolling="no"></iframe>
+            `;
+            document.getElementById('detailsModal').querySelector('.modal-content').scrollTop = 0;
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('detailsModal');
+            const playerContainer = document.getElementById('playerContainer');
+            modal.classList.remove('active');
+            playerContainer.innerHTML = ''; 
+        }
+
+        function setActiveButton(btnId) {
+            document.getElementById('btnAll').classList.remove('active');
+            document.getElementById('btnLast').classList.remove('active');
+            if(btnId) document.getElementById(btnId).classList.add('active');
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            searchLocalSeries(e.target.value);
+        });
+
+        window.onload = loadLocalJSON;
+    </script>
+</body>
+</html>
