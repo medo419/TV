@@ -43,9 +43,6 @@
             font-weight: bold;
             color: var(--accent-color);
             text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
         .search-container {
@@ -91,7 +88,7 @@
             background-color: var(--card-bg);
             border-radius: 12px;
             overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
@@ -114,11 +111,6 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-
-        .card:hover img {
-            transform: scale(1.05);
         }
 
         .card-title {
@@ -158,12 +150,12 @@
         .modal-content {
             background-color: var(--card-bg);
             width: 95%;
-            max-width: 900px;
-            height: 90vh;
+            max-width: 700px;
+            max-height: 85vh;
             border-radius: 16px;
             overflow-y: auto;
             position: relative;
-            padding: 20px;
+            padding: 25px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
@@ -183,65 +175,52 @@
             z-index: 10;
         }
 
-        /* --- تفاصيل المسلسل والمشغل --- */
         .details-header {
             display: flex;
             gap: 25px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             align-items: center;
+            border-bottom: 2px solid #222e43;
+            padding-bottom: 20px;
         }
 
         .details-poster {
-            width: 120px;
-            height: 170px;
+            width: 110px;
+            height: 160px;
             object-fit: cover;
             border-radius: 8px;
-        }
-
-        .player-container {
-            width: 100%;
-            height: 450px;
-            background-color: #000;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            display: none;
-        }
-
-        .player-container iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            border-radius: 12px;
         }
 
         /* --- قائمة الحلقات --- */
         .episodes-section h3 {
             margin-bottom: 15px;
-            border-bottom: 2px solid #222e43;
-            padding-bottom: 8px;
+            color: var(--text-color);
         }
 
         .episodes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
         }
 
         .ep-btn {
             background-color: #222e43;
             color: #fff;
-            border: none;
-            padding: 10px;
-            border-radius: 6px;
+            border: 2px solid transparent;
+            padding: 12px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
             transition: all 0.2s ease;
             text-align: center;
-            font-size: 13px;
+            font-size: 14px;
+            text-decoration: none;
+            display: block;
         }
 
-        .ep-btn:hover, .ep-btn.active {
+        .ep-btn:hover {
             background-color: var(--accent-color);
+            box-shadow: 0 4px 12px rgba(255, 42, 95, 0.3);
         }
 
         .status-msg {
@@ -256,7 +235,6 @@
             header { flex-direction: column; gap: 15px; padding: 15px; }
             .search-container { max-width: 100%; }
             .details-header { flex-direction: column; text-align: center; }
-            .player-container { height: 230px; }
         }
     </style>
 </head>
@@ -279,16 +257,16 @@
     <div id="detailsModal" class="modal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeModal()">✕</button>
-            <div id="playerContainer" class="player-container"></div>
             <div id="modalDetails" class="details-header"></div>
             <div class="episodes-section">
-                <h3>حلقات المسلسل</h3>
+                <h3>اختر الحلقة للمشاهدة المباشرة:</h3>
                 <div id="episodesGrid" class="episodes-grid"></div>
             </div>
         </div>
     </div>
 
     <script>
+        // رابط سيرفر التشغيل الرئيسي
         const BASE_API = "https://api.dfkz.site/krmzi/";
         const mainGrid = document.getElementById('mainGrid');
         const sectionTitle = document.getElementById('sectionTitle');
@@ -296,7 +274,6 @@
         
         let allLocalSeries = [];
 
-        // تصحيح بروتوكول الصور لتعمل بشكل آمن تماماً
         function fixImageUrl(url) {
             if (!url) return 'https://via.placeholder.com/140x210';
             if (url.startsWith('http://')) {
@@ -305,7 +282,6 @@
             return url;
         }
 
-        // جلب البيانات بدقة من krmzi.json الصغير المتوافق مع الرفع الحالي
         async function loadLocalJSON() {
             try {
                 const response = await fetch('krmzi.json'); 
@@ -314,11 +290,11 @@
                     allLocalSeries = data.series;
                     displayAllLocalSeries();
                 } else {
-                    mainGrid.innerHTML = '<div class="status-msg">تأكد من رفع ملف krmzi.json في نفس المجلد.</div>';
+                    mainGrid.innerHTML = '<div class="status-msg">تأكد من رفع ملف krmzi.json بشكل سليم.</div>';
                 }
             } catch (error) {
                 console.error("Error loading JSON:", error);
-                mainGrid.innerHTML = '<div class="status-msg">خطأ في قراءة البيانات، يرجى التحقق من الملف المرفوع.</div>';
+                mainGrid.innerHTML = '<div class="status-msg">خطأ في قراءة البيانات، يرجى مراجعة ملف الـ json.</div>';
             }
         }
 
@@ -354,8 +330,6 @@
             items.forEach((item, index) => {
                 const card = document.createElement('div');
                 card.className = 'card';
-                
-                // هنا تم إصلاح الربط بدقة ليستدعي الدالة الصحيحة عند الضغط بـ Index مخصص
                 card.onclick = () => showSeriesDetailsByIndex(index);
 
                 const securedImg = fixImageUrl(item.image);
@@ -370,7 +344,7 @@
             });
         }
 
-        // الدالة المحدثة والمربوطة بالكامل لعرض التفاصيل وتوليد الحلقات الـ 40 مباشرة
+        // دالة عرض المسلسل وإنشاء أزرار الحلقات للفتح المباشر الآمن
         function showSeriesDetailsByIndex(index) {
             const item = allLocalSeries[index];
             if (!item) return;
@@ -378,12 +352,8 @@
             const modal = document.getElementById('detailsModal');
             const detailsContainer = document.getElementById('modalDetails');
             const episodesGrid = document.getElementById('episodesGrid');
-            const playerContainer = document.getElementById('playerContainer');
             
-            playerContainer.style.display = 'none';
-            playerContainer.innerHTML = '';
             episodesGrid.innerHTML = '';
-            
             modal.classList.add('active');
 
             const securedPoster = fixImageUrl(item.image);
@@ -391,46 +361,32 @@
             detailsContainer.innerHTML = `
                 <img src="${securedPoster}" class="details-poster" alt="${item.title}">
                 <div>
-                    <h2 style="font-size: 18px; margin: 0 0 5px 0;">${item.title}</h2>
-                    <p style="color: var(--text-secondary); margin: 0; font-size: 13px;">المعرف المرجعي: ${item.id}</p>
+                    <h2 style="font-size: 20px; margin: 0 0 8px 0; color: #fff;">${item.title}</h2>
+                    <p style="color: var(--accent-color); margin: 0; font-size: 14px; font-weight: bold;">اضغط على الحلقة لفتح مشغل البث المباشر فوراً</p>
                 </div>
             `;
 
-            // توليد 40 حلقة تلقائياً ومباشرة لكل مسلسل لتغطية الحلقات بالكامل
+            // توليد 40 حلقة كاملة وجاهزة للفتح الخارجي السريع
             const totalEpisodes = 40; 
 
             for (let i = 1; i <= totalEpisodes; i++) {
-                const epBtn = document.createElement('button');
-                epBtn.className = 'ep-btn';
-                epBtn.innerText = `الحلقة ${i}`;
+                // استخدام وسم رابط <a> لضمان تخطي حظر الحماية وفتح الفيديو بسلاسة صاروخية
+                const epLink = document.createElement('a');
+                epLink.className = 'ep-btn';
+                epLink.innerText = `الحلقة ${i}`;
                 
-                epBtn.onclick = () => {
-                    document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
-                    epBtn.classList.add('active');
-                    
-                    // توليد كود البث الفريد للسيرفر المشغل
-                    const generatedEpId = `${item.id}ep${i}`;
-                    watchEpisode(generatedEpId);
-                };
-                episodesGrid.appendChild(epBtn);
-            }
-        }
+                // الرابط المباشر لتشغيل السيرفرات دون قيود المتصفحات
+                const generatedEpId = `${item.id}ep${i}`;
+                epLink.href = `${BASE_API}ep.php?epid=${generatedEpId}`;
+                epLink.target = '_blank'; // يفتح في صفحة مستقلة لضمان اشتغال الفيديو والأقسام بالكامل
 
-        // تشغيل البث بشكل فوري آمن ومستقر داخل الموقع
-        function watchEpisode(episodeId) {
-            const playerContainer = document.getElementById('playerContainer');
-            playerContainer.style.display = 'block';
-            playerContainer.innerHTML = `
-                <iframe src="${BASE_API}ep.php?epid=${episodeId}" allowfullscreen scrolling="no"></iframe>
-            `;
-            document.getElementById('detailsModal').querySelector('.modal-content').scrollTop = 0;
+                episodesGrid.appendChild(epLink);
+            }
         }
 
         function closeModal() {
             const modal = document.getElementById('detailsModal');
-            const playerContainer = document.getElementById('playerContainer');
             modal.classList.remove('active');
-            playerContainer.innerHTML = ''; 
         }
 
         searchInput.addEventListener('input', (e) => {
