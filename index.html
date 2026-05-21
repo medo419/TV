@@ -150,8 +150,8 @@
         .modal-content {
             background-color: var(--card-bg);
             width: 95%;
-            max-width: 700px;
-            max-height: 85vh;
+            max-width: 850px;
+            height: 90vh;
             border-radius: 16px;
             overflow-y: auto;
             position: relative;
@@ -175,50 +175,66 @@
             z-index: 10;
         }
 
+        /* --- تفاصيل المسلسل والمشغل --- */
         .details-header {
             display: flex;
             gap: 25px;
             margin-bottom: 25px;
             align-items: center;
-            border-bottom: 2px solid #222e43;
-            padding-bottom: 20px;
         }
 
         .details-poster {
-            width: 110px;
-            height: 160px;
+            width: 100px;
+            height: 145px;
             object-fit: cover;
             border-radius: 8px;
+        }
+
+        .player-container {
+            width: 100%;
+            height: 450px;
+            background-color: #000;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        }
+
+        .player-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 12px;
         }
 
         /* --- قائمة الحلقات --- */
         .episodes-section h3 {
             margin-bottom: 15px;
             color: var(--text-color);
+            border-top: 1px solid #222e43;
+            padding-top: 15px;
         }
 
         .episodes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+            gap: 10px;
         }
 
         .ep-btn {
             background-color: #222e43;
             color: #fff;
-            border: 2px solid transparent;
-            padding: 12px;
+            border: none;
+            padding: 12px 10px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
             transition: all 0.2s ease;
             text-align: center;
-            font-size: 14px;
-            text-decoration: none;
-            display: block;
+            font-size: 13px;
         }
 
-        .ep-btn:hover {
+        .ep-btn:hover, .ep-btn.active {
             background-color: var(--accent-color);
             box-shadow: 0 4px 12px rgba(255, 42, 95, 0.3);
         }
@@ -235,6 +251,7 @@
             header { flex-direction: column; gap: 15px; padding: 15px; }
             .search-container { max-width: 100%; }
             .details-header { flex-direction: column; text-align: center; }
+            .player-container { height: 240px; }
         }
     </style>
 </head>
@@ -257,17 +274,21 @@
     <div id="detailsModal" class="modal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeModal()">✕</button>
+            <div id="playerContainer" class="player-container"></div>
             <div id="modalDetails" class="details-header"></div>
             <div class="episodes-section">
-                <h3>اختر الحلقة للمشاهدة المباشرة:</h3>
+                <h3>حلقات المسلسل:</h3>
                 <div id="episodesGrid" class="episodes-grid"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // إرجاع الرابط الخارجي الأصلي للسيرفر بدقة عبر بروتوكول http لكي يستجيب بشكل سليم ولا يعطي خطأ 404
+        // رابط السيرفر الأساسي بصيغة http الأصلية لمنع مشاكل سيرفر البث
         const BASE_API = "http://api.dfkz.site/krmzi/";
+        // البروكسي الآمن والذكي لتمرير الفيديوهات وحمايتها بدون حظر متصفحات
+        const SECURE_PROXY = "https://corsproxy.io/?url=";
+
         const mainGrid = document.getElementById('mainGrid');
         const sectionTitle = document.getElementById('sectionTitle');
         const searchInput = document.getElementById('searchInput');
@@ -276,7 +297,6 @@
 
         function fixImageUrl(url) {
             if (!url) return 'https://via.placeholder.com/140x210';
-            // إبقاء روابط الصور على حالتها لتفتح من السيرفر مباشرة دون حظر
             return url;
         }
 
@@ -349,7 +369,10 @@
             const modal = document.getElementById('detailsModal');
             const detailsContainer = document.getElementById('modalDetails');
             const episodesGrid = document.getElementById('episodesGrid');
+            const playerContainer = document.getElementById('playerContainer');
             
+            playerContainer.style.display = 'none';
+            playerContainer.innerHTML = '';
             episodesGrid.innerHTML = '';
             modal.classList.add('active');
 
@@ -358,34 +381,52 @@
             detailsContainer.innerHTML = `
                 <img src="${securedPoster}" class="details-poster" alt="${item.title}">
                 <div>
-                    <h2 style="font-size: 20px; margin: 0 0 8px 0; color: #fff;">${item.title}</h2>
-                    <p style="color: var(--accent-color); margin: 0; font-size: 14px; font-weight: bold;">اضغط على الحلقة لفتح مشغل البث المباشر فوراً</p>
+                    <h2 style="font-size: 18px; margin: 0 0 5px 0; color: #fff;">${item.title}</h2>
+                    <p style="color: var(--text-secondary); margin: 0; font-size: 13px;">المعرف المرجعي: ${item.id}</p>
                 </div>
             `;
 
-            // توليد 40 حلقة كاملة
+            // توليد 40 حلقة لكل مسلسل
             const totalEpisodes = 40; 
 
             for (let i = 1; i <= totalEpisodes; i++) {
-                const epLink = document.createElement('a');
-                epLink.className = 'ep-btn';
-                epLink.innerText = `الحلقة ${i}`;
+                const epBtn = document.createElement('button');
+                epBtn.className = 'ep-btn';
+                epBtn.innerText = `الحلقة ${i}`;
                 
-                const generatedEpId = `${item.id}ep${i}`;
-                
-                // تعديل مسار الرابط المباشر ليطابق الـ http الأصلي تماماً لكي يفتح المشغل بدون أخطاء السيرفر
-                epLink.href = `${BASE_API}ep.php?epid=${generatedEpId}`;
-                epLink.target = '_blank'; 
-                // إضافة وسم حماية لمنع المتصفح من حظر الرابط الخارجي غير المشفر
-                epLink.rel = "noreferrer noopener";
-
-                episodesGrid.appendChild(epLink);
+                epBtn.onclick = () => {
+                    document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
+                    epBtn.classList.add('active');
+                    
+                    const generatedEpId = `${item.id}ep${i}`;
+                    watchEpisodeSecurely(generatedEpId);
+                };
+                episodesGrid.appendChild(epBtn);
             }
+        }
+
+        // تشغيل الفيديو بشكل سليم وآمن تماماً عبر البروكسي المغلف ليتخطى حظر المتصفحات
+        function watchEpisodeSecurely(episodeId) {
+            const playerContainer = document.getElementById('playerContainer');
+            playerContainer.style.display = 'block';
+            
+            // الرابط الأصلي للحلقة
+            const targetVideoUrl = `${BASE_API}ep.php?epid=${episodeId}`;
+            
+            // دمج الرابط مع البروكسي المغلف بـ Https لضمان التشغيل والفتح بلمحة بصر
+            playerContainer.innerHTML = `
+                <iframe src="${SECURE_PROXY}${encodeURIComponent(targetVideoUrl)}" allowfullscreen scrolling="no"></iframe>
+            `;
+            
+            // الصعود التلقائي لأعلى المودال لرؤية الشاشة بوضوح
+            document.getElementById('detailsModal').querySelector('.modal-content').scrollTop = 0;
         }
 
         function closeModal() {
             const modal = document.getElementById('detailsModal');
+            const playerContainer = document.getElementById('playerContainer');
             modal.classList.remove('active');
+            playerContainer.innerHTML = ''; 
         }
 
         searchInput.addEventListener('input', (e) => {
