@@ -150,8 +150,8 @@
         .modal-content {
             background-color: var(--card-bg);
             width: 95%;
-            max-width: 850px;
-            height: 90vh;
+            max-width: 650px;
+            max-height: 80vh;
             border-radius: 16px;
             overflow-y: auto;
             position: relative;
@@ -175,12 +175,13 @@
             z-index: 10;
         }
 
-        /* --- تفاصيل المسلسل والمشغل --- */
         .details-header {
             display: flex;
             gap: 25px;
             margin-bottom: 25px;
             align-items: center;
+            border-bottom: 2px solid #222e43;
+            padding-bottom: 20px;
         }
 
         .details-poster {
@@ -190,53 +191,36 @@
             border-radius: 8px;
         }
 
-        .player-container {
-            width: 100%;
-            height: 450px;
-            background-color: #000;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            display: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-        }
-
-        .player-container iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            border-radius: 12px;
-        }
-
         /* --- قائمة الحلقات --- */
         .episodes-section h3 {
             margin-bottom: 15px;
             color: var(--text-color);
-            border-top: 1px solid #222e43;
-            padding-top: 15px;
         }
 
         .episodes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
         }
 
-        .ep-btn {
+        .ep-link {
             background-color: #222e43;
             color: #fff;
-            border: none;
-            padding: 12px 10px;
+            padding: 14px 10px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
             transition: all 0.2s ease;
             text-align: center;
-            font-size: 13px;
+            font-size: 14px;
+            text-decoration: none;
+            display: block;
         }
 
-        .ep-btn:hover, .ep-btn.active {
+        .ep-link:hover {
             background-color: var(--accent-color);
-            box-shadow: 0 4px 12px rgba(255, 42, 95, 0.3);
+            box-shadow: 0 4px 12px rgba(255, 42, 95, 0.4);
+            transform: scale(1.03);
         }
 
         .status-msg {
@@ -251,7 +235,6 @@
             header { flex-direction: column; gap: 15px; padding: 15px; }
             .search-container { max-width: 100%; }
             .details-header { flex-direction: column; text-align: center; }
-            .player-container { height: 240px; }
         }
     </style>
 </head>
@@ -274,31 +257,25 @@
     <div id="detailsModal" class="modal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeModal()">✕</button>
-            <div id="playerContainer" class="player-container"></div>
             <div id="modalDetails" class="details-header"></div>
             <div class="episodes-section">
-                <h3>حلقات المسلسل:</h3>
+                <h3>اختر الحلقة لفتح مشغل البث الفوري:</h3>
                 <div id="episodesGrid" class="episodes-grid"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // رابط السيرفر الأساسي بصيغة http الأصلية لمنع مشاكل سيرفر البث
+        // رابط السيرفر الأصلي بالبروتوكول العادي
         const BASE_API = "http://api.dfkz.site/krmzi/";
-        // البروكسي الآمن والذكي لتمرير الفيديوهات وحمايتها بدون حظر متصفحات
-        const SECURE_PROXY = "https://corsproxy.io/?url=";
+        // ممر التخطي الذكي لمنع تحويل الروابط لـ Https ومنع حظر المتصفحات
+        const BYPASS_LINK = "https://href.li/?";
 
         const mainGrid = document.getElementById('mainGrid');
         const sectionTitle = document.getElementById('sectionTitle');
         const searchInput = document.getElementById('searchInput');
         
         let allLocalSeries = [];
-
-        function fixImageUrl(url) {
-            if (!url) return 'https://via.placeholder.com/140x210';
-            return url;
-        }
 
         async function loadLocalJSON() {
             try {
@@ -320,8 +297,6 @@
             sectionTitle.innerText = "جميع المسلسلات المتاحة";
             if(allLocalSeries.length > 0) {
                 renderGrid(allLocalSeries);
-            } else {
-                mainGrid.innerHTML = '<div class="status-msg">جاري بناء الواجهة السينمائية...</div>';
             }
         }
 
@@ -331,11 +306,9 @@
                 return;
             }
             sectionTitle.innerText = `نتائج البحث عن: ${query}`;
-            
             const filtered = allLocalSeries.filter(item => 
                 item.title.toLowerCase().includes(query.toLowerCase())
             );
-
             if(filtered.length > 0) {
                 renderGrid(filtered);
             } else {
@@ -349,12 +322,9 @@
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.onclick = () => showSeriesDetailsByIndex(index);
-
-                const securedImg = fixImageUrl(item.image);
-
                 card.innerHTML = `
                     <div class="card-img-wrapper">
-                        <img src="${securedImg}" alt="${item.title}" loading="lazy">
+                        <img src="${item.image}" alt="${item.title}" loading="lazy">
                     </div>
                     <h3 class="card-title" title="${item.title}">${item.title}</h3>
                 `;
@@ -369,20 +339,15 @@
             const modal = document.getElementById('detailsModal');
             const detailsContainer = document.getElementById('modalDetails');
             const episodesGrid = document.getElementById('episodesGrid');
-            const playerContainer = document.getElementById('playerContainer');
             
-            playerContainer.style.display = 'none';
-            playerContainer.innerHTML = '';
             episodesGrid.innerHTML = '';
             modal.classList.add('active');
 
-            const securedPoster = fixImageUrl(item.image);
-
             detailsContainer.innerHTML = `
-                <img src="${securedPoster}" class="details-poster" alt="${item.title}">
+                <img src="${item.image}" class="details-poster" alt="${item.title}">
                 <div>
                     <h2 style="font-size: 18px; margin: 0 0 5px 0; color: #fff;">${item.title}</h2>
-                    <p style="color: var(--text-secondary); margin: 0; font-size: 13px;">المعرف المرجعي: ${item.id}</p>
+                    <p style="color: var(--accent-color); margin: 0; font-size: 13px; font-weight: bold;">اضغط على الحلقة وسفتح لك سيرفر المشاهدة مباشرة بدون حظر!</p>
                 </div>
             `;
 
@@ -390,43 +355,25 @@
             const totalEpisodes = 40; 
 
             for (let i = 1; i <= totalEpisodes; i++) {
-                const epBtn = document.createElement('button');
-                epBtn.className = 'ep-btn';
-                epBtn.innerText = `الحلقة ${i}`;
+                const epLink = document.createElement('a');
+                epLink.className = 'ep-link';
+                epLink.innerText = `الحلقة ${i}`;
                 
-                epBtn.onclick = () => {
-                    document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
-                    epBtn.classList.add('active');
-                    
-                    const generatedEpId = `${item.id}ep${i}`;
-                    watchEpisodeSecurely(generatedEpId);
-                };
-                episodesGrid.appendChild(epBtn);
-            }
-        }
+                const generatedEpId = `${item.id}ep${i}`;
+                const originalUrl = `${BASE_API}ep.php?epid=${generatedEpId}`;
+                
+                // دمج ممر التخطي لمنع المتصفح من حظر الرابط الخارجي
+                epLink.href = `${BYPASS_LINK}${originalUrl}`;
+                epLink.target = '_blank';
+                epLink.rel = "noreferrer noopener";
 
-        // تشغيل الفيديو بشكل سليم وآمن تماماً عبر البروكسي المغلف ليتخطى حظر المتصفحات
-        function watchEpisodeSecurely(episodeId) {
-            const playerContainer = document.getElementById('playerContainer');
-            playerContainer.style.display = 'block';
-            
-            // الرابط الأصلي للحلقة
-            const targetVideoUrl = `${BASE_API}ep.php?epid=${episodeId}`;
-            
-            // دمج الرابط مع البروكسي المغلف بـ Https لضمان التشغيل والفتح بلمحة بصر
-            playerContainer.innerHTML = `
-                <iframe src="${SECURE_PROXY}${encodeURIComponent(targetVideoUrl)}" allowfullscreen scrolling="no"></iframe>
-            `;
-            
-            // الصعود التلقائي لأعلى المودال لرؤية الشاشة بوضوح
-            document.getElementById('detailsModal').querySelector('.modal-content').scrollTop = 0;
+                episodesGrid.appendChild(epLink);
+            }
         }
 
         function closeModal() {
             const modal = document.getElementById('detailsModal');
-            const playerContainer = document.getElementById('playerContainer');
             modal.classList.remove('active');
-            playerContainer.innerHTML = ''; 
         }
 
         searchInput.addEventListener('input', (e) => {
