@@ -266,9 +266,9 @@
     </div>
 
     <script>
-        // رابط السيرفر الأصلي بالبروتوكول العادي
+        // الرابط الأساسي للسيرفر
         const BASE_API = "http://api.dfkz.site/krmzi/";
-        // ممر التخطي الذكي لمنع تحويل الروابط لـ Https ومنع حظر المتصفحات
+        // ممر التخطي الخارجي لمنع المتصفحات من إجبار حماية https على السيرفر
         const BYPASS_LINK = "https://href.li/?";
 
         const mainGrid = document.getElementById('mainGrid');
@@ -347,11 +347,11 @@
                 <img src="${item.image}" class="details-poster" alt="${item.title}">
                 <div>
                     <h2 style="font-size: 18px; margin: 0 0 5px 0; color: #fff;">${item.title}</h2>
-                    <p style="color: var(--accent-color); margin: 0; font-size: 13px; font-weight: bold;">اضغط على الحلقة وسفتح لك سيرفر المشاهدة مباشرة بدون حظر!</p>
+                    <p style="color: var(--accent-color); margin: 0; font-size: 13px; font-weight: bold;">اضغط على الحلقة وسفتح لك سيرفر البث الأصلي مباشرة!</p>
                 </div>
             `;
 
-            // توليد 40 حلقة لكل مسلسل
+            // توليد 40 حلقة كاملة وجاهزة
             const totalEpisodes = 40; 
 
             for (let i = 1; i <= totalEpisodes; i++) {
@@ -359,10 +359,9 @@
                 epLink.className = 'ep-link';
                 epLink.innerText = `الحلقة ${i}`;
                 
-                const generatedEpId = `${item.id}ep${i}`;
-                const originalUrl = `${BASE_API}ep.php?epid=${generatedEpId}`;
+                // هنا التعديل الجوهري والحل السحري: إرسال المتغيرات بصيغتها القانونية التي تطلبها قاعدة بيانات السيرفر
+                const originalUrl = `${BASE_API}ep.php?id=${item.id}&ep=${i}`;
                 
-                // دمج ممر التخطي لمنع المتصفح من حظر الرابط الخارجي
                 epLink.href = `${BYPASS_LINK}${originalUrl}`;
                 epLink.target = '_blank';
                 epLink.rel = "noreferrer noopener";
